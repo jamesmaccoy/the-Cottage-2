@@ -38,12 +38,12 @@
 		  	<div class="site-header__reservations-list">
 				<ul>
 				  <li class="site-header__reservations-link" tabindex="-1" rel="noopener noreferrer">
-					<a href="https://c.yoco.com/checkout/ch_eLB344Y75RvIb4tnGvUndyEj">
+					<a href="#" class="payment_url" data-id="long_weekend_at_the_Cottage">
 					  <span class="caption"><img src="img/3-days-cottage.png"> Stay 3 nights</span>
 					</a>
 				  </li>
 				   <li class="site-header__reservations-link" tabindex="-1" rel="noopener noreferrer">
-					<a href="https://c.yoco.com/checkout/ch_XEwO33eWKKKCq6XFjqof3zPE">
+					<a href="#" class="payment_url" data-id="entire_week_at_the_cottage">
 					  <span class="caption"><img src="img/3-days-shank.png"> Stay 7 Nights</span>
 					</a>
 				  </li>
@@ -337,7 +337,7 @@ This is a place to rejuvenate your soul , open a bottle of bubbly and get in tou
 			<div class="row justify-content-center d-md-flex d-block align-items-center pb80 pt-60">
 				<div class="col-12 text-center">
 					<div class="headingr5 pb16 clrgreen">We look forward to</div>
-					<div class="headingr2 clrgreen">Welcoming you very soon and know  you will enjoy your stay in this  very special place.</div>
+					<div class="headingr2 clrgreen">Welcoming you very soon and know you will enjoy your stay in this very special place.</div>
 				</div>
 			</div>
 			<div class="row justify-content-center d-md-flex d-block">
@@ -479,22 +479,19 @@ This is a place to rejuvenate your soul , open a bottle of bubbly and get in tou
 			$(".price-container").each(function () {
 				var containerID = $(this).attr("id"); // Get the ID of the current container
 				var priceSpan = $(this).find(".price"); // Find the price span inside the container
-				// Retrieve data from Firebase based on the container ID
-				const docRef = db.collection("packages").doc(containerID);
-				docRef
-					.get()
-					.then((doc) => {
-						if (doc.exists) {
-							const price
-								=
-								doc.data().price; // Assuming 'price' is a field in your 'packages' documents
-							priceSpan.text(price); // Update the text of the span with the fetched price
+				jQuery
+					.getJSON("/api/v1/get_package", { type: containerID })
+					.done(function (resp) {
+						if (resp?.status === true && resp?.data?.price != null) {
+							priceSpan.text(resp.data.price);
 						} else {
-							console.log("No such document!");
+							console.error("Price not found:", resp?.data);
+							priceSpan.text("-");
 						}
 					})
-					.catch((error) => {
-						console.error("Error getting document:", error);
+					.fail(function (xhr) {
+						console.error("Price lookup failed:", xhr.responseText);
+						priceSpan.text("-");
 					});
 			});
 
@@ -517,15 +514,21 @@ This is a place to rejuvenate your soul , open a bottle of bubbly and get in tou
           var buttonValue = jQuery(this).data("id"); // or jQuery(this).text();
           if (buttonValue) {
             jQuery.ajax({
-              url: "https://yoco-backend.vercel.app/api/v1/generate_checkout_link",
+              url: "/api/v1/generate_checkout_link",
               method: "POST",
-              data: {
-				type : buttonValue
-			  },
+              contentType: "application/json",
+              data: JSON.stringify({ type: buttonValue }),
               success: function (request) {
-                if (request?.status === true) {
-                  window.location.href = request?.data?.redirectUrl;
+                if (request?.status === true && request?.data?.redirectUrl) {
+                  window.location.href = request.data.redirectUrl;
+                } else {
+                  console.error("Checkout error:", request?.data);
+                  alert("Could not start payment. Please try again or contact us.");
                 }
+              },
+              error: function (xhr) {
+                console.error("Checkout request failed:", xhr.responseText);
+                alert("Could not start payment. Please try again or contact us.");
               },
             });
           }
