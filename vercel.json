@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/v1/generate_checkout_link.js": {
+      "maxDuration": 30
+    }
+  }
+}
+

@@ -1,0 +1,12 @@
+{
+  "name": "llandudnoshack-site",
+  "private": true,
+  "description": "Static site with Vercel API for Yoco checkout",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
+
